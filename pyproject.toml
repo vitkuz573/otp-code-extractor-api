@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "otp-code-extractor-api"
+version = "1.0.0"
+description = "Clean REST API for extracting OTP codes from QR codes, otpauth:// URIs and base32 secrets."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Vitaly Kuzyaev"},
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "pydantic[email]>=2.6.0",
+    "requests>=2.31.0",
+    "structlog>=24.1.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.29.0",
+    "aiosqlite>=0.20.0",
+    "alembic>=1.13.0",
+    "argon2-cffi>=23.1.0",
+    "redis[hiredis]>=5.0.0",
+    "pyotp>=2.9.0",
+    "qreader>=1.0.0",
+    "opencv-python-headless>=4.9.0",
+    "numpy>=1.26.0,<3.0",
+    "Pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "httpx>=0.27.0",
+    "ruff>=0.3.0",
+    "mypy>=1.10.0",
+    "hypothesis>=6.100.0",
+    "qrcode[pil]>=7.4.0",
+]
+db = [
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "argon2-cffi>=23.1.0",
+    "redis[hiredis]>=5.0.0",
+]
+
+[project.scripts]
+otp-extractor = "otp_code_extractor.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/otp_code_extractor"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["otp_code_extractor.qr_decoder"]
+ignore_errors = true

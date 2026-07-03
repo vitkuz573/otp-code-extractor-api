@@ -1,0 +1,156 @@
+{
+  "info": {
+    "name": "OTP Code Extractor API",
+    "description": "Extract OTP codes from QR images, otpauth:// URIs and base32 secrets.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"]}
+          }
+        },
+        {
+          "name": "Livez",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/livez", "host": ["{{base_url}}"], "path": ["livez"]}
+          }
+        },
+        {
+          "name": "Readyz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/readyz", "host": ["{{base_url}}"], "path": ["readyz"]}
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/metrics", "host": ["{{base_url}}"], "path": ["metrics"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "OTP Reference",
+      "item": [
+        {"name": "Algorithms", "request": {"method": "GET", "url": {"raw": "{{base_url}}/v1/otp/algorithms", "host": ["{{base_url}}"], "path": ["v1/otp/algorithms"]}}},
+        {"name": "Digits", "request": {"method": "GET", "url": {"raw": "{{base_url}}/v1/otp/digits", "host": ["{{base_url}}"], "path": ["v1/otp/digits"]}}},
+        {"name": "Periods", "request": {"method": "GET", "url": {"raw": "{{base_url}}/v1/otp/periods", "host": ["{{base_url}}"], "path": ["v1/otp/periods"]}}}
+      ]
+    },
+    {
+      "name": "OTP Extraction",
+      "item": [
+        {
+          "name": "From URI",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uri\": \"otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=ACME\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/otp/from-uri", "host": ["{{base_url}}"], "path": ["v1/otp/from-uri"]}
+          }
+        },
+        {
+          "name": "From Secret",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secret\": \"JBSWY3DPEHPK3PXP\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/otp/from-secret", "host": ["{{base_url}}"], "path": ["v1/otp/from-secret"]}
+          }
+        },
+        {
+          "name": "From String (auto-detect)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"JBSWY3DPEHPK3PXP\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/otp/from-string", "host": ["{{base_url}}"], "path": ["v1/otp/from-string"]}
+          }
+        },
+        {
+          "name": "Parse (no code)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uri\": \"otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/otp/parse", "host": ["{{base_url}}"], "path": ["v1/otp/parse"]}
+          }
+        },
+        {
+          "name": "Batch",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\"kind\": \"uri\", \"uri\": \"otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP\"},\n    {\"kind\": \"secret\", \"secret\": \"JBSWY3DPEHPK3PXP\"}\n  ]\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/otp/batch", "host": ["{{base_url}}"], "path": ["v1/otp/batch"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"Sup3rSecret!\",\n  \"name\": \"Alice\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/v1/auth/register", "host": ["{{base_url}}"], "path": ["v1/auth/register"]}
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{api_key}}"}],
+            "url": {"raw": "{{base_url}}/v1/auth/me", "host": ["{{base_url}}"], "path": ["v1/auth/me"]}
+          }
+        },
+        {
+          "name": "Usage stats",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{api_key}}"}],
+            "url": {"raw": "{{base_url}}/v1/auth/usage-stats?days=7", "host": ["{{base_url}}"], "path": ["v1/auth/usage-stats"], "query": [{"key": "days", "value": "7"}]}
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000"},
+    {"key": "api_key", "value": ""}
+  ]
+}
