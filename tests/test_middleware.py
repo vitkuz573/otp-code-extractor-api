@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -12,7 +11,10 @@ from otp_code_extractor.middleware import register_middleware
 
 
 def _build_app(auth_enabled: bool, rate_limit_enabled: bool) -> FastAPI:
+    from otp_code_extractor.routes import router
+
     app = FastAPI()
+    app.include_router(router)
     settings = Settings(
         auth_enabled=auth_enabled,
         rate_limit_enabled=rate_limit_enabled,

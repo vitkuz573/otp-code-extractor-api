@@ -25,7 +25,7 @@ async function fromSecret(secret) {
 }
 
 async function fromQrBase64(imageBase64, mimeType = "image/png") {
-  const r = await fetch(`${BASE_URL}/v1/otp/from-qr`, {
+  const r = await fetch(`${BASE_URL}/v1/otp/from-qr-base64`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ image_base64: imageBase64, mime_type: mimeType }),

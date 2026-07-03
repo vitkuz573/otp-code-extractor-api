@@ -28,6 +28,7 @@ from .exceptions import (
     TenantAlreadyExistsError,
     TenantNotFoundError,
 )
+from .models import UsageEndpointStat, UsagePeriodStat
 
 
 @dataclass
@@ -62,9 +63,7 @@ async def register_tenant(
         await db.execute(select(Tenant).where(Tenant.email == email_norm))
     ).scalar_one_or_none()
     if existing is not None:
-        raise TenantAlreadyExistsError(
-            f"A tenant with email {email_norm!r} already exists"
-        )
+        raise TenantAlreadyExistsError(f"A tenant with email {email_norm!r} already exists")
 
     tenant = Tenant(
         email=email_norm,
@@ -96,16 +95,10 @@ async def list_tenant_api_keys(db: AsyncSession, tenant_id: str) -> list[ApiKey]
     return list(result.scalars().all())
 
 
-async def revoke_api_key(
-    db: AsyncSession, key_id: str, tenant_id: str
-) -> bool:
+async def revoke_api_key(db: AsyncSession, key_id: str, tenant_id: str) -> bool:
     """Mark an API key as inactive. Returns False when not found."""
     api_key = (
-        await db.execute(
-            select(ApiKey).where(
-                ApiKey.id == key_id, ApiKey.tenant_id == tenant_id
-            )
-        )
+        await db.execute(select(ApiKey).where(ApiKey.id == key_id, ApiKey.tenant_id == tenant_id))
     ).scalar_one_or_none()
     if api_key is None or not api_key.is_active:
         return False
@@ -120,11 +113,7 @@ async def regenerate_api_key(
 ) -> tuple[ApiKey, str] | None:
     """Rotate the secret of an API key. Returns (api_key, new_raw_key) or None."""
     api_key = (
-        await db.execute(
-            select(ApiKey).where(
-                ApiKey.id == key_id, ApiKey.tenant_id == tenant_id
-            )
-        )
+        await db.execute(select(ApiKey).where(ApiKey.id == key_id, ApiKey.tenant_id == tenant_id))
     ).scalar_one_or_none()
     if api_key is None or not api_key.is_active:
         return None
@@ -153,9 +142,7 @@ async def validate_api_key(
     presented_hash = hash_api_key(raw_key, secret)
     api_key = (
         await db.execute(
-            select(ApiKey).where(
-                ApiKey.key_hash == presented_hash, ApiKey.is_active.is_(True)
-            )
+            select(ApiKey).where(ApiKey.key_hash == presented_hash, ApiKey.is_active.is_(True))
         )
     ).scalar_one_or_none()
 
@@ -192,9 +179,7 @@ def _enforce_cache_limit() -> None:
 # ---------------------------------------------------------------------------
 
 
-async def authenticate_tenant(
-    db: AsyncSession, email: str, password: str
-) -> Tenant:
+async def authenticate_tenant(db: AsyncSession, email: str, password: str) -> Tenant:
     """Authenticate a tenant by email + password."""
     email_norm = email.strip().lower()
     tenant = (
@@ -294,9 +279,7 @@ async def get_tenant_usage_stats(
     }
 
 
-async def get_all_usage_stats(
-    db: AsyncSession, period: str, days: int
-) -> dict[str, Any]:
+async def get_all_usage_stats(db: AsyncSession, period: str, days: int) -> dict[str, Any]:
     """Return system-wide usage statistics."""
     data = await _query_usage(db, None, period, days)
     return {"period": period, "days": days, **data, "top_tenants": []}
@@ -304,14 +287,10 @@ async def get_all_usage_stats(
 
 async def get_system_metrics(db: AsyncSession) -> dict[str, Any]:
     """Return aggregate counts for the admin dashboard."""
-    tenants = (
-        await db.execute(select(func.count(Tenant.id)))
-    ).scalar_one()
+    tenants = (await db.execute(select(func.count(Tenant.id)))).scalar_one()
     keys = (await db.execute(select(func.count(ApiKey.id)))).scalar_one()
     active_keys = (
-        await db.execute(
-            select(func.count(ApiKey.id)).where(ApiKey.is_active.is_(True))
-        )
+        await db.execute(select(func.count(ApiKey.id)).where(ApiKey.is_active.is_(True)))
     ).scalar_one()
     logs = (await db.execute(select(func.count(UsageLog.id)))).scalar_one()
     return {
@@ -322,9 +301,7 @@ async def get_system_metrics(db: AsyncSession) -> dict[str, Any]:
     }
 
 
-async def admin_list_tenant_keys(
-    db: AsyncSession, tenant_id: str
-) -> list[ApiKey]:
+async def admin_list_tenant_keys(db: AsyncSession, tenant_id: str) -> list[ApiKey]:
     """Return all (including inactive) keys for a tenant — admin only."""
     if (await db.get(Tenant, tenant_id)) is None:
         raise TenantNotFoundError(f"Tenant {tenant_id!r} not found")

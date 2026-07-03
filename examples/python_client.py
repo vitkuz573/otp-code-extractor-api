@@ -59,11 +59,11 @@ def from_secret() -> None:
 
 
 def from_qr(path: Path) -> None:
-    """Extract a code from a QR PNG."""
+    """Extract a code from a QR PNG via the JSON base64 endpoint."""
     data = path.read_bytes()
     b64 = base64.b64encode(data).decode()
     result = _post(
-        "/v1/otp/from-qr",
+        "/v1/otp/from-qr-base64",
         {"image_base64": b64, "mime_type": "image/png"},
     )
     print(f"code: {result['code']}  issuer={result['issuer']}")

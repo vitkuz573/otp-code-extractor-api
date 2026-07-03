@@ -50,6 +50,7 @@ PUBLIC_PATHS = frozenset(
         "/openapi.json",
         "/openapi.json?format=json",
         "/metrics",
+        "/v1/auth/register",
     }
 )
 
@@ -58,6 +59,7 @@ _SCOPE_TEMPLATES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
     (re.compile(template), scope)
     for template, scope in (
         (r"^/v1/otp/from-qr$", "write"),
+        (r"^/v1/otp/from-qr-base64$", "write"),
         (r"^/v1/otp/from-uri$", "write"),
         (r"^/v1/otp/from-secret$", "write"),
         (r"^/v1/otp/from-string$", "write"),
@@ -260,9 +262,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self._settings = settings
         self._window = 60.0
-        self._limiter = SlidingWindowLimiter(
-            get_redis(settings), window_seconds=self._window
-        )
+        self._limiter = SlidingWindowLimiter(get_redis(settings), window_seconds=self._window)
 
     def _client_key(self, request: Request) -> str:
         tenant_id = getattr(request.state, "tenant_id", None)
@@ -360,9 +360,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             return _error_response(AuthenticationError("Authentication backend error"), request)
 
         if validated is None:
-            return _error_response(
-                AuthenticationError("Invalid or revoked API key"), request
-            )
+            return _error_response(AuthenticationError("Invalid or revoked API key"), request)
 
         request.state.api_key = token
         request.state.api_key_id = validated.api_key_id

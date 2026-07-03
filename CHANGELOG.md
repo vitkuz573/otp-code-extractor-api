@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - FastAPI application with multi-tenant API key auth, rate limiting, metrics,
   audit log, request-id tracking and structured logging.
-- `POST /v1/otp/from-qr` — extract a code from a QR image (base64 or multipart).
+- `POST /v1/otp/from-qr` — extract a code from a QR image (multipart upload).
+- `POST /v1/otp/from-qr-base64` — extract a code from a QR image (JSON base64).
 - `POST /v1/otp/from-uri` — extract a code from an `otpauth://` URI.
 - `POST /v1/otp/from-secret` — extract a code from a raw base32 secret.
 - `POST /v1/otp/from-string` — auto-detect URI / secret / data-URI image.

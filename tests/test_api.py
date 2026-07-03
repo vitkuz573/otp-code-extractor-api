@@ -91,9 +91,7 @@ class TestFromUri:
 
 class TestFromSecret:
     def test_valid_secret(self, client: TestClient):
-        r = client.post(
-            "/v1/otp/from-secret", json={"secret": "JBSWY3DPEHPK3PXP"}
-        )
+        r = client.post("/v1/otp/from-secret", json={"secret": "JBSWY3DPEHPK3PXP"})
         assert r.status_code == 200
         body = r.json()
         assert body["type"] == "totp"
@@ -145,9 +143,7 @@ class TestParse:
 
 class TestFromString:
     def test_auto_secret(self, client: TestClient):
-        r = client.post(
-            "/v1/otp/from-string", json={"input": "JBSWY3DPEHPK3PXP"}
-        )
+        r = client.post("/v1/otp/from-string", json={"input": "JBSWY3DPEHPK3PXP"})
         assert r.status_code == 200
 
     def test_auto_uri(self, client: TestClient, sample_uri_totp):
@@ -210,7 +206,8 @@ class TestFromQr:
         data = sample_qr_png.read_bytes()
         b64 = base64.b64encode(data).decode()
         r = client.post(
-            "/v1/otp/from-qr", json={"image_base64": b64, "mime_type": "image/png"}
+            "/v1/otp/from-qr-base64",
+            json={"image_base64": b64, "mime_type": "image/png"},
         )
         assert r.status_code == 200, r.text
         body = r.json()
@@ -226,9 +223,7 @@ class TestFromQr:
         assert r.status_code == 200, r.text
 
     def test_from_qr_invalid_base64(self, client: TestClient):
-        r = client.post(
-            "/v1/otp/from-qr", json={"image_base64": "not-base64!@#"}
-        )
+        r = client.post("/v1/otp/from-qr-base64", json={"image_base64": "not-base64!@#"})
         assert r.status_code in (400, 422)
 
 

@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .config import get_settings
-from .models import OtpAlgorithm, OtpType
+from .models import OtpAlgorithm
 from .otp import extract_code_from_qr, extract_code_from_secret, extract_code_from_uri, parse_only
 
 
@@ -102,9 +102,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
 
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON output (overrides the global flag)",
+    )
+
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_code = sub.add_parser("code", help="Generate a single OTP code")
+    p_code = sub.add_parser("code", parents=[common], help="Generate a single OTP code")
     src = p_code.add_mutually_exclusive_group(required=True)
     src.add_argument("--uri", help="otpauth:// URI")
     src.add_argument("--secret", help="Raw base32 secret")
@@ -121,7 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_code.add_argument("--mime", default=None, help="Override mime type for --qr")
     p_code.set_defaults(func=cmd_code)
 
-    p_parse = sub.add_parser("parse", help="Parse a URI / secret without a code")
+    p_parse = sub.add_parser("parse", parents=[common], help="Parse a URI / secret without a code")
     src2 = p_parse.add_mutually_exclusive_group(required=True)
     src2.add_argument("--uri", help="otpauth:// URI")
     src2.add_argument("--secret", help="Raw base32 secret")
@@ -136,7 +143,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_parse.set_defaults(func=cmd_parse)
 
-    p_qr = sub.add_parser("qr", help="Render an otpauth:// URI to a PNG")
+    p_qr = sub.add_parser("qr", parents=[common], help="Render an otpauth:// URI to a PNG")
     p_qr.add_argument("--uri", required=True, help="otpauth:// URI to encode")
     p_qr.add_argument("--out", required=True, help="Output PNG path")
     p_qr.set_defaults(func=cmd_qr)

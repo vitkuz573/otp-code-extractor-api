@@ -49,7 +49,8 @@ docker compose up -d
 | GET    | `/readyz`                  | Readiness probe                                      |
 | GET    | `/metrics`                 | In-process metrics snapshot                          |
 | GET    | `/audit`                   | Recent audit log entries                             |
-| POST   | `/v1/otp/from-qr`          | QR image → code                                      |
+| POST   | `/v1/otp/from-qr`          | QR image (multipart upload) → code                   |
+| POST   | `/v1/otp/from-qr-base64`   | QR image (JSON base64) → code                        |
 | POST   | `/v1/otp/from-uri`         | `otpauth://` URI → code                              |
 | POST   | `/v1/otp/from-secret`      | Base32 secret → code                                 |
 | POST   | `/v1/otp/from-string`      | Auto-detect URI / secret / data-URI image            |
@@ -94,21 +95,24 @@ curl -X POST http://localhost:8000/v1/otp/from-uri \
 
 ### Sample: extract a code from a QR image
 
-```bash
-curl -X POST http://localhost:8000/v1/otp/from-qr \
-  -H "Content-Type: application/json" \
-  -d @- <<'JSON'
-{
-  "image_base64": "<base64-encoded PNG of the QR code>"
-}
-JSON
-```
-
-Multipart upload is also supported:
+Multipart upload:
 
 ```bash
 curl -X POST http://localhost:8000/v1/otp/from-qr \
   -F "file=@qr.png"
+```
+
+JSON base64 (POST to `/v1/otp/from-qr-base64`):
+
+```bash
+curl -X POST http://localhost:8000/v1/otp/from-qr-base64 \
+  -H "Content-Type: application/json" \
+  -d @- <<'JSON'
+{
+  "image_base64": "<base64-encoded PNG of the QR code>",
+  "mime_type": "image/png"
+}
+JSON
 ```
 
 ### Auto-detect (`from-string`)

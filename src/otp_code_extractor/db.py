@@ -53,17 +53,13 @@ class Tenant(Base):
 
     __tablename__ = "tenants"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -81,27 +77,17 @@ class ApiKey(Base):
     """API key belonging to a tenant."""
 
     __tablename__ = "api_keys"
-    __table_args__ = (
-        Index("ix_api_keys_tenant_active", "tenant_id", "is_active"),
-    )
+    __table_args__ = (Index("ix_api_keys_tenant_active", "tenant_id", "is_active"),)
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id"), index=True
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
     key_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     key_prefix: Mapped[str] = mapped_column(String(20), nullable=False)
     name: Mapped[str] = mapped_column(String(255), default="default")
     scopes: Mapped[str] = mapped_column(String(255), default="read")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    last_used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     tenant: Mapped[Tenant] = relationship("Tenant", back_populates="api_keys")
 
@@ -112,9 +98,7 @@ class UsageLog(Base):
     __tablename__ = "usage_logs"
     __table_args__ = (Index("ix_usage_logs_tenant_created", "tenant_id", "created_at"),)
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     api_key_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("api_keys.id"), nullable=True
     )
@@ -125,9 +109,7 @@ class UsageLog(Base):
     method: Mapped[str] = mapped_column(String(10), nullable=False)
     status_code: Mapped[int] = mapped_column(Integer, nullable=False)
     response_time_ms: Mapped[float] = mapped_column(Float, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 # ---------------------------------------------------------------------------

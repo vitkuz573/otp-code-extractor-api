@@ -21,7 +21,6 @@ from otp_code_extractor.config import Settings, get_settings  # noqa: E402
 from otp_code_extractor.db import Base, async_engine, reset_engine_cache  # noqa: E402
 from otp_code_extractor.main import create_app  # noqa: E402
 
-
 # Well-known test secret. RFC 6238 / Google-Authenticator compatible.
 SAMPLE_SECRET = "JBSWY3DPEHPK3PXP"
 SAMPLE_URI_TOTP = (

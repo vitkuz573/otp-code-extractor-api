@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -51,8 +50,8 @@ class Settings(BaseSettings):
     max_qr_image_bytes: int = 5 * 1024 * 1024
 
     default_algorithm: Literal["SHA1", "SHA256", "SHA512"] = "SHA1"
-    default_digits: int = Field(6, ge=4, le=10)
-    default_period: int = Field(30, ge=5, le=300)
+    default_digits: int = 6
+    default_period: int = 30
 
     metrics_enabled: bool = True
     audit_log_enabled: bool = True

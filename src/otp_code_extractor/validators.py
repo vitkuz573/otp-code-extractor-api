@@ -15,7 +15,7 @@ from .exceptions import (
     UnsupportedDigitsError,
     UnsupportedPeriodError,
 )
-from .models import OtpAlgorithm, SUPPORTED_DIGITS, SUPPORTED_PERIODS
+from .models import SUPPORTED_DIGITS, SUPPORTED_PERIODS, OtpAlgorithm
 
 _BASE32_ALPHABET = re.compile(r"^[A-Z2-7]+=*$")
 _BASE32_NO_PADDING = re.compile(r"^[A-Z2-7]+$")
@@ -49,7 +49,9 @@ def is_valid_base32(secret: str, *, allow_padding: bool = True) -> bool:
         return False
 
 
-def validate_algorithm(value: str | OtpAlgorithm | None, default: str | None = None) -> OtpAlgorithm:
+def validate_algorithm(
+    value: str | OtpAlgorithm | None, default: str | None = None
+) -> OtpAlgorithm:
     """Validate and normalize an algorithm name."""
     if value is None:
         value = default
@@ -160,7 +162,9 @@ def parse_otpauth_uri(uri: str, settings: Settings | None = None) -> dict:
     label = unquote(parts.path.lstrip("/")) if parts.path else ""
 
     query = parse_qs(parts.query, keep_blank_values=True)
-    flat = {k.lower(): v[0] if len(v) == 1 else v for k, v in query.items()}
+    flat: dict[str, str] = {
+        k.lower(): (v[0] if isinstance(v, list) else v) for k, v in query.items()
+    }
 
     raw_secret = flat.get("secret")
     if not raw_secret:
@@ -173,12 +177,8 @@ def parse_otpauth_uri(uri: str, settings: Settings | None = None) -> dict:
     issuer = (issuer_from_query or issuer_from_label or "").strip() or None
 
     algorithm = validate_algorithm(flat.get("algorithm"), default=settings.default_algorithm)
-    digits = validate_digits(
-        _safe_int(flat.get("digits")), default=settings.default_digits
-    )
-    period = validate_period(
-        _safe_int(flat.get("period")), default=settings.default_period
-    )
+    digits = validate_digits(_safe_int(flat.get("digits")), default=settings.default_digits)
+    period = validate_period(_safe_int(flat.get("period")), default=settings.default_period)
     counter = _safe_int(flat.get("counter"))
 
     if type_raw == "totp":

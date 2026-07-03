@@ -51,5 +51,5 @@ It is **not** designed to be exposed to the public internet without:
 ## Reporting a vulnerability
 
 Please **do not** open a public issue for security-sensitive bugs. Email
-`security@vitkuz573.dev` with a description and reproduction steps. We will
+`vitkuz573@gmail.com` with a description and reproduction steps. We will
 respond within 72 hours and coordinate a fix before any public disclosure.

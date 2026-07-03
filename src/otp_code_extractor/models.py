@@ -42,13 +42,11 @@ class OtpFromSecretRequest(BaseModel):
     """Extract a code from a raw base32 secret."""
 
     secret: str = Field(
-        ..., min_length=16, max_length=128, description="Base32-encoded shared secret"
+        ..., min_length=4, max_length=128, description="Base32-encoded shared secret"
     )
-    algorithm: OtpAlgorithm | None = Field(
-        None, description="Hashing algorithm (default SHA1)"
-    )
-    digits: int | None = Field(None, ge=4, le=10, description="Code length (default 6)")
-    period: int | None = Field(None, ge=5, le=300, description="TOTP period (default 30)")
+    algorithm: str | None = Field(None, description="Hashing algorithm (default SHA1)")
+    digits: int | None = Field(None, description="Code length (default 6)")
+    period: int | None = Field(None, description="TOTP period (default 30)")
     counter: int | None = Field(
         None, ge=0, description="HOTP counter (treats input as HOTP when set)"
     )
@@ -86,7 +84,7 @@ class OtpBatchItem(BaseModel):
 class OtpBatchRequest(BaseModel):
     """Batch extraction request."""
 
-    items: list[OtpBatchItem] = Field(..., min_length=1, max_length=100)
+    items: list[OtpBatchItem] = Field(..., min_length=1, max_length=1000)
 
 
 class OtpBatchError(BaseModel):
@@ -173,9 +171,7 @@ class OtpParseResponse(BaseModel):
     issuer: str | None = None
     account: str | None = None
     label: str | None = None
-    secret: str | None = Field(
-        None, description="The secret, omitted when redact=true (default)."
-    )
+    secret: str | None = Field(None, description="The secret, omitted when redact=true (default).")
     secret_redacted: bool = Field(False, description="True if the secret was redacted.")
 
 

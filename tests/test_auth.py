@@ -22,15 +22,11 @@ class TestTenantLifecycle:
         assert raw_key.startswith("otp_")
 
         # Round-trip authentication via the email/password path.
-        authed = await authenticate_tenant(
-            db_session, "alice@example.com", "Sup3rSecret!"
-        )
+        authed = await authenticate_tenant(db_session, "alice@example.com", "Sup3rSecret!")
         assert authed.id == tenant.id
 
     async def test_register_duplicate_email(self, db_session, settings: Settings):
-        await register_tenant(
-            db_session, "alice@example.com", "Sup3rSecret!", "Alice", settings
-        )
+        await register_tenant(db_session, "alice@example.com", "Sup3rSecret!", "Alice", settings)
         with pytest.raises(Exception):
             await register_tenant(
                 db_session, "alice@example.com", "anotherpwd1!", "Alice2", settings
@@ -47,9 +43,7 @@ class TestTenantLifecycle:
         assert "write" in validated.scopes
 
     async def test_validate_unknown_key_returns_none(self, db_session, settings: Settings):
-        result = await validate_api_key(
-            db_session, "otp_does-not-exist", settings
-        )
+        result = await validate_api_key(db_session, "otp_does-not-exist", settings)
         assert result is None
 
 
@@ -84,15 +78,17 @@ class TestAuthApiEndpoints:
         new_key = r.json()["api_key"]
         assert new_key.startswith("otp_")
 
-        # The new key should now work.
+        # After regeneration the old key is invalid (its hash was rotated).
         new_headers = {"Authorization": f"Bearer {new_key}"}
         r2 = auth_client.get("/v1/auth/me", headers=new_headers)
         assert r2.status_code == 200
 
-        r3 = auth_client.post(f"/v1/auth/api-keys/{key_id}/revoke")
+        # Revoke with the NEW key — the old one would 401 because its hash
+        # no longer matches.
+        r3 = auth_client.post(f"/v1/auth/api-keys/{key_id}/revoke", headers=new_headers)
         assert r3.status_code == 200
 
-        # Revoking means validate_api_key returns None for the new raw key.
+        # After revocation, validate_api_key returns None for the raw key.
         r4 = auth_client.get("/v1/auth/me", headers=new_headers)
         assert r4.status_code == 401
 

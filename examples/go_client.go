@@ -92,7 +92,7 @@ func fromQRFile(path string) {
 		"mime_type":    "image/png",
 	}
 	var out otpResponse
-	if err := postJSON("/v1/otp/from-qr", body, &out); err != nil {
+	if err := postJSON("/v1/otp/from-qr-base64", body, &out); err != nil {
 		fmt.Println("from-qr error:", err)
 		return
 	}

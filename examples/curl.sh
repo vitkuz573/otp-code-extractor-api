@@ -53,4 +53,16 @@ curl -fsS -X POST "${BASE_URL}/v1/otp/from-qr" \
     -F "file=@${1:-data/sample_otp.png}" | python -m json.tool
 
 echo
+echo "==> 8. Extract a code from a QR PNG (JSON base64)"
+QR_B64="$(base64 "${1:-data/sample_otp.png}" 2>/dev/null || true)"
+if [ -n "${QR_B64}" ]; then
+    curl -fsS -X POST "${BASE_URL}/v1/otp/from-qr-base64" \
+        -H "Content-Type: application/json" \
+        -d "{\"image_base64\": \"${QR_B64}\", \"mime_type\": \"image/png\"}" \
+        | python -m json.tool
+else
+    echo "    (skipped — file not found)"
+fi
+
+echo
 echo "Done."

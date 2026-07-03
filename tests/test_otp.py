@@ -68,9 +68,7 @@ class TestTotpExtraction:
 
 class TestHotpExtraction:
     def test_extract_hotp_with_counter(self):
-        config, code = extract_code_from_secret(
-            "JBSWY3DPEHPK3PXP", counter=42
-        )
+        config, code = extract_code_from_secret("JBSWY3DPEHPK3PXP", counter=42)
         assert config.type.value == "hotp"
         assert config.counter == 42
         assert len(code) == 6

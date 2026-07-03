@@ -66,14 +66,17 @@
           }
         },
         {
-          "name": "From Secret",
+          "name": "From QR (base64)",
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"secret\": \"JBSWY3DPEHPK3PXP\"\n}"
+              "raw": "{\n  \"image_base64\": \"<base64 PNG here>\",\n  \"mime_type\": \"image/png\"\n}"
             },
+            "url": {"raw": "{{base_url}}/v1/otp/from-qr-base64", "host": ["{{base_url}}"], "path": ["v1/otp/from-qr-base64"]}
+          }
+        },
             "url": {"raw": "{{base_url}}/v1/otp/from-secret", "host": ["{{base_url}}"], "path": ["v1/otp/from-secret"]}
           }
         },

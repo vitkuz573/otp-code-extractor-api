@@ -153,9 +153,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     """Register handlers for all custom and framework exceptions."""
 
     @app.exception_handler(OtpExtractorError)
-    async def handle_otp_extractor_error(
-        request: Request, exc: OtpExtractorError
-    ) -> JSONResponse:
+    async def handle_otp_extractor_error(request: Request, exc: OtpExtractorError) -> JSONResponse:
         request_id = getattr(request.state, "request_id", None)
         logger.warning(
             "otp_extractor_error",
@@ -185,9 +183,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(Exception)
-    async def handle_unhandled_error(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def handle_unhandled_error(request: Request, exc: Exception) -> JSONResponse:
         request_id = getattr(request.state, "request_id", None)
         logger.exception(
             "unhandled_error",

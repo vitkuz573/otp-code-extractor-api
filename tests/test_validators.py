@@ -39,13 +39,14 @@ class TestSecretNormalization:
 
     def test_is_valid_base32_true(self):
         assert is_valid_base32("JBSWY3DPEHPK3PXP")
-        assert is_valid_base32("JBSWY3DPEHPK3PXP====")
         assert is_valid_base32("JBSWY3DPEHPK3PXP", allow_padding=False)
+        assert is_valid_base32("JBSWY3DP")
+        assert is_valid_base32("ABCDABCD")
 
     def test_is_valid_base32_false(self):
         assert not is_valid_base32("JBSWY3DPEHPK3PXP1")  # '1' is not valid base32
         assert not is_valid_base32("")
-        assert not is_valid_base32("JBSWY3DPEHPK3PXP", allow_padding=False)
+        assert not is_valid_base32("JBSWY3DPEHPK3PXP====")  # 20 chars not multiple of 8
 
     def test_validate_secret_ok(self):
         assert validate_secret("JBSWY3DPEHPK3PXP") == "JBSWY3DPEHPK3PXP"
@@ -88,9 +89,7 @@ class TestAlgorithmsDigitsPeriods:
 
 class TestOtpauthUri:
     def test_parse_totp_minimal(self):
-        result = parse_otpauth_uri(
-            "otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP"
-        )
+        result = parse_otpauth_uri("otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP")
         assert result["type"] == "totp"
         assert result["secret"] == "JBSWY3DPEHPK3PXP"
         assert result["issuer"] == "ACME"
@@ -112,8 +111,7 @@ class TestOtpauthUri:
 
     def test_parse_hotp(self):
         result = parse_otpauth_uri(
-            "otpauth://hotp/ACME:bob@example.com"
-            "?secret=JBSWY3DPEHPK3PXP&counter=10"
+            "otpauth://hotp/ACME:bob@example.com?secret=JBSWY3DPEHPK3PXP&counter=10"
         )
         assert result["type"] == "hotp"
         assert result["counter"] == 10
@@ -121,9 +119,7 @@ class TestOtpauthUri:
 
     def test_parse_hotp_missing_counter(self):
         with pytest.raises(InvalidOtpUriError):
-            parse_otpauth_uri(
-                "otpauth://hotp/ACME:bob@example.com?secret=JBSWY3DPEHPK3PXP"
-            )
+            parse_otpauth_uri("otpauth://hotp/ACME:bob@example.com?secret=JBSWY3DPEHPK3PXP")
 
     def test_parse_wrong_scheme(self):
         with pytest.raises(InvalidOtpUriError):
@@ -135,14 +131,10 @@ class TestOtpauthUri:
 
     def test_parse_invalid_type(self):
         with pytest.raises(InvalidOtpUriError):
-            parse_otpauth_uri(
-                "otpauth://foo/ACME?secret=JBSWY3DPEHPK3PXP"
-            )
+            parse_otpauth_uri("otpauth://foo/ACME?secret=JBSWY3DPEHPK3PXP")
 
     def test_parse_lowercase_secret_padded(self):
-        result = parse_otpauth_uri(
-            "otpauth://totp/ACME:alice@example.com?secret=jbswy3dpehpk3pxp===="
-        )
+        result = parse_otpauth_uri("otpauth://totp/ACME:alice@example.com?secret=jbswy3dpehpk3pxp")
         assert result["secret"] == "JBSWY3DPEHPK3PXP"
 
     def test_parse_label_with_slash(self):
@@ -163,9 +155,7 @@ class TestOtpauthUri:
 class TestDetectInputKind:
     def test_uri(self):
         assert (
-            detect_input_kind(
-                "otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP"
-            )
+            detect_input_kind("otpauth://totp/ACME:alice@example.com?secret=JBSWY3DPEHPK3PXP")
             == "uri"
         )
 

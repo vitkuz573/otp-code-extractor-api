@@ -9,6 +9,7 @@ computation.
 from __future__ import annotations
 
 import base64
+import binascii
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -122,14 +123,17 @@ def build_pyotp(config: OtpConfig) -> pyotp.TOTP | pyotp.HOTP:
 
 def generate_code(config: OtpConfig, *, now: datetime | None = None) -> str:
     """Generate the current code for the config."""
-    instance = build_pyotp(config)
     if config.type == OtpType.TOTP:
+        totp = build_pyotp(config)
+        assert isinstance(totp, pyotp.TOTP)
         if now is None:
-            return instance.now()
-        return instance.at(now)
+            return totp.now()
+        return totp.at(now)
     if config.counter is None:
         raise OtpGenerationError("HOTP requires a counter value")
-    return instance.at(config.counter)
+    hotp = build_pyotp(config)
+    assert isinstance(hotp, pyotp.HOTP)
+    return hotp.at(config.counter)
 
 
 def remaining_seconds(period: int, *, now: datetime | None = None) -> int:

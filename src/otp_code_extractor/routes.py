@@ -31,6 +31,8 @@ from .exceptions import (
     TenantNotFoundError,
 )
 from .models import (
+    SUPPORTED_DIGITS,
+    SUPPORTED_PERIODS,
     AlgorithmListResponse,
     AllUsageStatsResponse,
     ApiKeyResponse,
@@ -60,8 +62,6 @@ from .models import (
     RegenerateKeyResponse,
     RegisterRequest,
     RegisterResponse,
-    SUPPORTED_DIGITS,
-    SUPPORTED_PERIODS,
     TenantAdminResponse,
     TenantUsageStatsResponse,
 )
@@ -72,7 +72,6 @@ from .otp import (
     extract_code_from_uri,
     parse_only,
 )
-from .qr_decoder import decode_qr_image_b64
 
 router = APIRouter()
 
@@ -254,9 +253,7 @@ def _code_response(config, code: str) -> OtpCodeResponse:
         issuer=config.issuer,
         account=config.account,
         label=config.label,
-        remaining_seconds=remaining_seconds(config.period)
-        if config.type == OtpType.TOTP
-        else None,
+        remaining_seconds=remaining_seconds(config.period) if config.type == OtpType.TOTP else None,
         generated_at=time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()) + "Z",
     )
 
@@ -295,22 +292,23 @@ def from_secret(payload: OtpFromSecretRequest) -> OtpCodeResponse:
     tags=["otp"],
 )
 async def from_qr(
-    payload: OtpFromQrBase64Request | None = None,
-    file: UploadFile | None = File(None),
+    file: UploadFile = File(..., description="QR image (PNG / JPEG / ...)"),
 ) -> OtpCodeResponse:
-    """Extract a code from a QR image supplied as JSON base64 or multipart upload."""
-    if file is not None:
-        image_bytes = await file.read()
-        mime_type = file.content_type
-    elif payload is not None and payload.image_base64:
-        image_bytes = _b64_to_bytes(payload.image_base64)
-        mime_type = payload.mime_type
-    else:
-        raise InvalidOtpInputError(
-            "Either 'image_base64' (JSON) or 'file' (multipart) is required"
-        )
+    """Extract a code from a QR image uploaded as multipart/form-data."""
+    image_bytes = await file.read()
+    config, code = extract_code_from_qr(image_bytes, mime_type=file.content_type)
+    return _code_response(config, code)
 
-    config, code = extract_code_from_qr(image_bytes, mime_type=mime_type)
+
+@router.post(
+    "/v1/otp/from-qr-base64",
+    response_model=OtpCodeResponse,
+    tags=["otp"],
+)
+def from_qr_base64(payload: OtpFromQrBase64Request) -> OtpCodeResponse:
+    """Extract a code from a QR image supplied as JSON base64."""
+    image_bytes = _b64_to_bytes(payload.image_base64)
+    config, code = extract_code_from_qr(image_bytes, mime_type=payload.mime_type)
     return _code_response(config, code)
 
 
@@ -414,15 +412,15 @@ def batch(payload: OtpBatchRequest) -> OtpBatchResponse:
                 )
             )
             failed += 1
-    return OtpBatchResponse(
-        total=len(results), succeeded=succeeded, failed=failed, results=results
-    )
+    return OtpBatchResponse(total=len(results), succeeded=succeeded, failed=failed, results=results)
 
 
 def _process_batch_item(item: OtpBatchItem) -> OtpCodeResponse:
     """Dispatch a single batch item to the right extractor."""
     kind = (item.kind or "auto").lower()
-    if kind in ("uri",) or (kind == "auto" and item.uri and item.uri.lower().startswith("otpauth://")):
+    if kind in ("uri",) or (
+        kind == "auto" and item.uri and item.uri.lower().startswith("otpauth://")
+    ):
         if not item.uri:
             raise InvalidOtpInputError("kind=uri requires 'uri'")
         config, code = extract_code_from_uri(item.uri)
@@ -443,9 +441,7 @@ def _process_batch_item(item: OtpBatchItem) -> OtpCodeResponse:
         config, code = extract_code_from_qr(image_bytes, mime_type=None)
         return _code_response(config, code)
     if kind == "auto":
-        raise InvalidOtpInputError(
-            "auto-detect could not determine input kind for the batch item"
-        )
+        raise InvalidOtpInputError("auto-detect could not determine input kind for the batch item")
     raise InvalidOtpInputError(f"Unknown batch kind: {kind!r}")
 
 
@@ -459,18 +455,14 @@ class _RegisterRequestAlias(RegisterRequest):
 
 
 @router.post("/v1/auth/register", response_model=RegisterResponse, tags=["auth"])
-async def register(
-    req: RegisterRequest, db: AsyncSession = Depends(get_db)
-) -> RegisterResponse:
+async def register(req: RegisterRequest, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
     """Register a new tenant account.
 
     Returns the tenant record and a raw API key that is shown only at creation
     time. Store this key securely — it cannot be retrieved again.
     """
     settings = get_settings()
-    tenant, raw_key = await register_tenant(
-        db, req.email, req.password, req.name, settings
-    )
+    tenant, raw_key = await register_tenant(db, req.email, req.password, req.name, settings)
     await db.commit()
     return RegisterResponse(
         tenant_id=tenant.id,
@@ -484,9 +476,7 @@ async def register(
     response_model=list[ApiKeyResponse],
     tags=["auth"],
 )
-async def list_keys(
-    request: Request, db: AsyncSession = Depends(get_db)
-) -> list[ApiKeyResponse]:
+async def list_keys(request: Request, db: AsyncSession = Depends(get_db)) -> list[ApiKeyResponse]:
     """List all API keys for the authenticated tenant."""
     tenant_id = getattr(request.state, "tenant_id", None)
     if not tenant_id:
@@ -507,9 +497,7 @@ async def list_keys(
 
 
 @router.post("/v1/auth/api-keys/{key_id}/revoke", tags=["auth"])
-async def revoke_key(
-    key_id: str, request: Request, db: AsyncSession = Depends(get_db)
-) -> dict:
+async def revoke_key(key_id: str, request: Request, db: AsyncSession = Depends(get_db)) -> dict:
     """Revoke an API key belonging to the authenticated tenant."""
     tenant_id = getattr(request.state, "tenant_id", None)
     if not tenant_id:
@@ -550,9 +538,7 @@ async def regenerate_key(
 
 
 @router.get("/v1/auth/me", response_model=MeResponse, tags=["auth"])
-async def get_me(
-    request: Request, db: AsyncSession = Depends(get_db)
-) -> MeResponse:
+async def get_me(request: Request, db: AsyncSession = Depends(get_db)) -> MeResponse:
     """Return the authenticated tenant's profile summary."""
     tenant_id = getattr(request.state, "tenant_id", None)
     if not tenant_id:
@@ -630,9 +616,7 @@ async def admin_tenants(
 
     results: list[TenantAdminResponse] = []
     for t in tenants:
-        keys = (
-            await db.execute(select(ApiKey.id).where(ApiKey.tenant_id == t.id))
-        ).all()
+        keys = (await db.execute(select(ApiKey.id).where(ApiKey.tenant_id == t.id))).all()
         active = (
             await db.execute(
                 select(func.count(ApiKey.id)).where(

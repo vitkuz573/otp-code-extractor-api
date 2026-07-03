@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import deque
-from collections.abc import Awaitable
 from threading import Lock
 from typing import Any
 
@@ -139,12 +138,17 @@ def reset_redis_for_tests() -> None:
         _redis_client = None
 
 
-async def wait_for(predicate: Awaitable[bool] | Any, timeout: float = 5.0) -> bool:
+async def wait_for(predicate: Any, timeout: float = 5.0) -> bool:
     """Poll ``predicate`` until it returns truthy or the timeout elapses."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            value = await predicate() if asyncio.iscoroutine(predicate) else predicate()
+            if asyncio.iscoroutinefunction(predicate):
+                value = await predicate()
+            elif asyncio.iscoroutine(predicate):
+                value = await predicate
+            else:
+                value = predicate()
         except Exception as exc:  # noqa: BLE001
             logger.debug("wait_for_predicate_failed", extra={"err": str(exc)})
             value = False
